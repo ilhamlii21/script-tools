@@ -1,100 +1,59 @@
-# Panduan & Script Basic Setup VM (`basic-setup.sh`)
+# Basic Setup VM (`basic-setup.sh`)
 
-Dokumen ini berisi isi script `basic-setup.sh` beserta panduan langkah demi langkah untuk menjalankannya pada VM (Virtual Machine) berbasis Ubuntu/Debian.
+Script otomatisasi untuk melakukan setup dasar pada Virtual Machine (VM) berbasis **Ubuntu / Debian**.
 
 ---
 
-## 1. Isi Script (`basic-setup.sh`)
+## 📋 Fitur & Isi Script
 
-Berikut adalah isi lengkap dari script `basic-setup.sh`:
+Script `basic-setup.sh` melakukan langkah-langkah berikut secara otomatis:
+
+1. **Pemeriksaan Hak Akses Root**: Memastikan script dijalankan sebagai `sudo` / `root`.
+2. **Update & Upgrade Sistem**: Menjalankan paket update dan upgrade (`apt-get update` & `apt-get upgrade`).
+3. **Instalasi Tools Dasar**:
+   - `curl` & `wget` (Utilitas unduhan)
+   - `git` (Version control)
+   - `vim` (Teks editor)
+   - `htop` (Monitoring resource sistem)
+   - `net-tools` (Utilitas jaringan)
+   - `unzip` (Ekstraksi arsip)
+   - `tree` (Visualisasi struktur direktori)
+   - `ca-certificates` & `gnupg` (Manajemen sertifikat & keamanan)
+   - `ufw` (Firewall)
+4. **Instalasi & Konfigurasi Docker**:
+   - Memasang Docker Engine terbaru melalui script instalasi resmi Docker (`https://get.docker.com`).
+   - Mengaktifkan dan menjalankan layanan Docker secara otomatis (`systemctl enable --now docker`).
+   - Menambahkan user yang menjalankan perintah `sudo` ke grup `docker` (sehingga dapat menjalankan Docker tanpa `sudo`).
+5. **Verifikasi Instalasi**: Menampilkan versi Docker, Docker Compose, dan Tree yang berhasil terpasang.
+
+---
+
+## 🚀 Cara Menjalankan
+
+Anda dapat menjalankan script ini di server Ubuntu/Debian melalui salah satu opsi berikut:
+
+### Opsi 1: Jalankan Langsung (Eksekusi Instan)
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-# --- Cek root ---
-if [[ $EUID -ne 0 ]]; then
-  echo "Jalankan dengan sudo/root"; exit 1
-fi
-
-export DEBIAN_FRONTEND=noninteractive
-
-echo "==> Update & upgrade sistem"
-apt-get update -y
-apt-get upgrade -y
-
-echo "==> Install tools dasar"
-apt-get install -y curl wget git vim htop net-tools unzip tree ca-certificates gnupg ufw
-
-echo "==> Install Docker"
-if ! command -v docker >/dev/null 2>&1; then
-  curl -fsSL https://get.docker.com | sh
-else
-  echo "Docker sudah terpasang, dilewati"
-fi
-
-systemctl enable --now docker
-
-# Tambahkan user yang menjalankan sudo ke grup docker
-TARGET_USER="${SUDO_USER:-$USER}"
-if [[ "$TARGET_USER" != "root" ]]; then
-  usermod -aG docker "$TARGET_USER"
-  echo "User $TARGET_USER ditambahkan ke grup docker (logout/login ulang)"
-fi
-
-echo "==> Selesai"
-docker --version
-docker compose version
-tree --version
+curl -fsSL https://raw.githubusercontent.com/ilhamlii21/script-tools/main/basic-setup.sh | sudo bash
 ```
 
 ---
 
-## 2. Cara Menjalankan di VM (Ubuntu/Debian)
-
-### Langkah 1: Masuk ke VM via SSH
-```bash
-ssh user@ip_address_vm
-```
-
-### Langkah 2: Buat File `basic-setup.sh` di VM
-Buat file script menggunakan editor teks seperti `nano`:
+### Opsi 2: Unduh, Inspect (Cek Isi Script), dan Jalankan
 
 ```bash
-nano basic-setup.sh
-```
-*Salin dan tempel kode script di atas, lalu simpan (`Ctrl+O`, `Enter`, `Ctrl+X`).*
-
-> **Atau** unggah langsung dari komputer lokal Anda via `scp`:
-> ```bash
-> scp basic-setup.sh user@ip_address_vm:~/
-> ```
-
-### Langkah 3: Beri Akses Eksekusi (Executable Permission)
-```bash
-chmod +x basic-setup.sh
+curl -fsSL https://raw.githubusercontent.com/ilhamlii21/script-tools/main/basic-setup.sh -o basic-setup.sh
+less basic-setup.sh
+sudo bash basic-setup.sh
 ```
 
-### Langkah 4: Jalankan Script dengan Akses Sudo / Root
-```bash
-sudo ./basic-setup.sh
-```
+---
 
-### Langkah 5: Terapkan Perubahan Grup Docker
-Supaya user bisa menggunakan perintah `docker` tanpa `sudo`, lakukan logout lalu login kembali, atau jalankan:
+## 💡 Catatan Setelah Instalasi
+
+Agar perubahan grup `docker` berlaku pada user Anda tanpa perlu logout/login kembali, jalankan perintah berikut:
 
 ```bash
 newgrp docker
-```
-
----
-
-## 3. Verifikasi Instalasi
-
-Jalankan perintah berikut di VM untuk memastikan tools telah berhasil terpasang:
-
-```bash
-docker --version
-docker compose version
-git --version
 ```
